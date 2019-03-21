@@ -24,17 +24,38 @@ App = {
   },
 
   initWeb3: async function() {
-    /*
-     * Replace me...
-     */
+    
+    if (window.ethereum) {
+      App.web3Provider = window.ethereum;
+
+      try {
+        await window.ethereum.enable();
+      } catch(ex) {
+        console.error("User denied account access");
+      }
+
+      web3 = new Web3(App.web3Provider);
+
+    }  
+
+
+
 
     return App.initContract();
   },
 
   initContract: function() {
-    /*
-     * Replace me...
-     */
+
+    $.getJSON('Adoption.json', function(data){
+      App.contracts.Adoption = TruffleContract(data)
+
+      App.contracts.Adoption.setProvider(App.web3Provider)
+
+      return App.markAdopted();
+
+    })
+
+
 
     return App.bindEvents();
   },
@@ -44,9 +65,27 @@ App = {
   },
 
   markAdopted: function(adopters, account) {
-    /*
-     * Replace me...
-     */
+
+    var adoptionInstance;
+
+    App.contracts.Adoption.deployed().then(function(instance) {
+      adoptionInstance = instance;
+      return adoptionInstance.getAdopters.call();
+    }).then(function(adopters) {
+      for (i =0; i < adopters.length; i++) {
+        if (adopters[i] !== '0x0000000000000000000000000000000000000000') {
+          $('.panel-pet').eq(i).find('button').text('Success').attr('disabled', true);
+        }
+      }
+
+
+    }).catch(function(err) {
+      console.log(err.message);
+    });
+
+
+
+
   },
 
   handleAdopt: function(event) {
